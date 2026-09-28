@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" data-theme="saffron">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#fbf6ef">
+<title>Sadhana</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" class="brand-ico"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2 2.2"/><circle cx="12" cy="21" r="1.8" fill="currentColor"/></svg>
+      <span id="topTitle">Sadhana</span>
+    </div>
+    <button class="icon-btn" id="todayBtn" title="Go to today">Today</button>
+  </header>
+
+  <main id="view"></main>
+
+  <nav class="bottomnav">
+    <button data-tab="home" class="active"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg><span>Home</span></button>
+    <button data-tab="dash"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke-width="2.2" stroke="currentColor" stroke-linecap="round"/></svg><span>Dashboard</span></button>
+    <button data-tab="export"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm8 1v5h5M12 11v7m-3-3l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg><span>Export</span></button>
+    <button data-tab="settings"><svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm8.4 4.9l1.6 1.2-2 3.4-1.9-.7a7.6 7.6 0 0 1-2 1.2L15.8 21h-4l-.3-2a7.6 7.6 0 0 1-2-1.2l-1.9.7-2-3.4 1.6-1.2a7.7 7.7 0 0 1 0-2.4L5.6 10.3l2-3.4 1.9.7a7.6 7.6 0 0 1 2-1.2l.3-2h4l.3 2a7.6 7.6 0 0 1 2 1.2l1.9-.7 2 3.4-1.6 1.2a7.7 7.7 0 0 1 0 2.4z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>Settings</span></button>
+  </nav>
+
+  <div id="sheetWrap" class="sheet-wrap" hidden>
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet" role="dialog"><div class="sheet-grip"></div><div id="sheetBody"></div></div>
+  </div>
+  <div id="toast" class="toast" hidden></div>
+</div>
+<script src="lib/jspdf.umd.min.js"></script>
+<script src="lib/jspdf.plugin.autotable.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
