@@ -495,7 +495,7 @@ function renderExport(v) {
       ${sr ? `<tr>${sr.map(c => `<td style="background:rgb(${THEMES[S.settings.theme].pdf.join(',')});font-weight:600">${esc(c)}</td>`).join('')}</tr>` : ''}</table></div>
     <div class="row2">
       <button class="btn" id="savePdf">${ICON.pdf} Save PDF</button>
-      <button class="btn sec" id="sharePdf">${ICON.share} Share</button>
+      <button class="btn sec" id="shareImage">${ICON.share} Share image</button>
     </div>
     <button class="btn sec" id="monthPdf">Whole month (${MON[expMon.getMonth()]}) as one PDF</button>
   </div>
@@ -510,7 +510,7 @@ function renderExport(v) {
   $('#nm').oninput = e => { S.settings.name = e.target.value; persist(); };
   $('#sumT').onclick = () => { S.settings.summaryRow = !S.settings.summaryRow; persist(); render(); };
   $('#savePdf').onclick = () => exportPdf([expMon], false);
-  $('#sharePdf').onclick = () => exportPdf([expMon], true);
+  $('#shareImage').onclick = () => shareImage([expMon]);
   $('#monthPdf').onclick = () => {
     const m = expMon.getMonth(), y = expMon.getFullYear(); const mons = [];
     let d = mondayOf(new Date(y, m, 1)); if (d.getMonth() !== m) d = addDays(d, 7);
@@ -565,6 +565,15 @@ function exportPdf(mons, share) {
       if (navigator.canShare({ files: [f] })) navigator.share({ files: [f], title: name }).catch(() => {}); else doc.save(name);
     } else { doc.save(name); toast('Downloaded ' + name); }
   } catch (e) { toast('Could not create PDF: ' + e.message, 4000); console.error(e); }
+}
+function shareImage(mons) {
+  try {
+    if (!Bridge || !Bridge.sharePdfAsImage) { toast('Image sharing is available in the app'); return; }
+    const pdf = buildPdf(mons);
+    const base64 = pdf.output('datauristring').split(',')[1];
+    const name = fileName(mons).replace(/\.pdf$/i, '.png');
+    toast(Bridge.sharePdfAsImage(base64, name) || 'Opening share…');
+  } catch (e) { toast('Could not create image: ' + e.message, 4000); console.error(e); }
 }
 window.__sadhanaBuildPdf = (monKey) => buildPdf([dateOf(monKey)]); // used by tests
 

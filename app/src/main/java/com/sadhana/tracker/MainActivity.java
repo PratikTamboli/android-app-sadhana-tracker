@@ -6,12 +6,17 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Insets;
+import android.graphics.Matrix;
+import android.graphics.pdf.PdfRenderer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.view.Gravity;
@@ -327,6 +332,67 @@ public class MainActivity extends Activity {
                 return "Saved to Downloads/Sadhana/" + fileName;
             } catch (Exception e) {
                 return "Save failed: " + e.getMessage();
+            }
+        }
+
+        @JavascriptInterface
+        public String sharePdfAsImage(String base64, String fileName) {
+            File tempPdf = null;
+            Bitmap bitmap = null;
+            Uri imageUri = null;
+            try {
+                tempPdf = File.createTempFile("sadhana-share-", ".pdf", getCacheDir());
+                try (FileOutputStream out = new FileOutputStream(tempPdf)) {
+                    out.write(Base64.decode(base64, Base64.DEFAULT));
+                }
+
+                try (ParcelFileDescriptor descriptor = ParcelFileDescriptor.open(tempPdf, ParcelFileDescriptor.MODE_READ_ONLY);
+                     PdfRenderer renderer = new PdfRenderer(descriptor)) {
+                    if (renderer.getPageCount() == 0) return "Could not create image";
+                    try (PdfRenderer.Page page = renderer.openPage(0)) {
+                        int width = page.getWidth() * 2;
+                        int height = page.getHeight() * 2;
+                        bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                        new Canvas(bitmap).drawColor(Color.WHITE);
+                        Matrix transform = new Matrix();
+                        transform.setScale((float) width / page.getWidth(), (float) height / page.getHeight());
+                        page.render(bitmap, null, transform, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+                    }
+                }
+
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+                values.put(MediaStore.MediaColumns.MIME_TYPE, "image/png");
+                values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Sadhana");
+                imageUri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                if (imageUri == null) return "Could not create image file";
+                try (OutputStream out = getContentResolver().openOutputStream(imageUri)) {
+                    if (out == null || !bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)) {
+                        throw new IllegalStateException("Could not write image");
+                    }
+                }
+
+                final Uri shareUri = imageUri;
+                final String subject = fileName.replaceAll("\\.png$", "");
+                runOnUiThread(() -> {
+                    Intent send = new Intent(Intent.ACTION_SEND);
+                    send.setType("image/png");
+                    send.putExtra(Intent.EXTRA_STREAM, shareUri);
+                    send.putExtra(Intent.EXTRA_SUBJECT, subject);
+                    send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    try {
+                        startActivity(Intent.createChooser(send, "Share sadhana card"));
+                    } catch (Exception e) {
+                        Toast.makeText(MainActivity.this, "No app to share with", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return "Opening share…";
+            } catch (Exception e) {
+                if (imageUri != null) getContentResolver().delete(imageUri, null, null);
+                return "Image sharing failed: " + e.getMessage();
+            } finally {
+                if (bitmap != null) bitmap.recycle();
+                if (tempPdf != null) tempPdf.delete();
             }
         }
     }
